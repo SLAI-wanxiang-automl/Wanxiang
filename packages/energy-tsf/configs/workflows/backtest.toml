@@ -1,0 +1,13 @@
+[request]
+task_type = "backtest"
+horizon = "1d"
+stride = "1d"
+publish = true
+
+[bayesian]
+epsilon = 0.001
+temperature = 0.10
+
+[storage]
+memory_root = "asset_store"
+work_root = "work_dirs/backtest"

@@ -1,0 +1,13 @@
+[cleaning]
+missing = "linear_interpolate"
+edge_fill = "nearest"
+record_imputation_mask = true
+
+[retrieval]
+allow_similar = true
+allow_similar_on_direct_failure = false
+max_source_solutions = 3
+
+[storage]
+memory_root = "asset_store"
+work_root = "work_dirs/forecast"

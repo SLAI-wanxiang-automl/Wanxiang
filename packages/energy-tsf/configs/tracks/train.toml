@@ -1,0 +1,11 @@
+[track]
+name = "train"
+write_candidate = true
+write_active = false
+resume_completed_trials = true
+
+[resources]
+max_parallel_trials = 2
+
+[network]
+allow_model_download = false

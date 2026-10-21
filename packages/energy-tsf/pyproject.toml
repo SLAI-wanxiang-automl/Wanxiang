@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "energy-tsf-harness"
+version = "0.1.0"
+description = "Mingyue Wanxiang (energyTSF): auditable renewable-energy time-series modeling and forecasting."
+license = {text = "MIT"}
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "scipy>=1.13",
+    "pydantic>=2.10,<3",
+    "scikit-learn>=1.5",
+    "statsmodels>=0.14",
+    "joblib>=1.4",
+    "lightgbm>=4.5",
+    "xgboost>=3.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4"]
+
+[project.scripts]
+energy-tsf = "energy_tsf.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+markers = ["slow: local heavyweight acceptance tests"]

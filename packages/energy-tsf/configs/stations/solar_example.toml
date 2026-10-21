@@ -1,0 +1,13 @@
+[station]
+station_id = "solar-demo"
+energy_type = "solar"
+timezone = "Asia/Shanghai"
+latitude = 31.2304
+longitude = 121.4737
+technology = "utility-scale"
+capacity = 50.0
+capacity_unit = "MW"
+frequency = "10min"
+target = "power"
+target_unit = "MW"
+timestamp_column = "timestamp"

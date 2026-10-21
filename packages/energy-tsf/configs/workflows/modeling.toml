@@ -1,0 +1,33 @@
+[cleaning]
+missing = "linear_interpolate"
+edge_fill = "nearest"
+record_imputation_mask = true
+
+[split]
+train = 0.7
+validation = 0.2
+test = 0.1
+strategy = "chronological"
+
+[features]
+daily_lags = [1, 2, 3, 7]
+recent_lags = 12
+rolling_windows = [6, 12, 144]
+calendar = true
+
+[search]
+seed = 42
+primary_metric = "rmse"
+secondary_metric = "mae"
+max_trials = 64
+max_parallel_trials = 2
+
+[ensemble]
+method = "nnls"
+fallback = "inverse_rmse"
+non_negative = true
+normalize = true
+
+[storage]
+memory_root = "asset_store"
+work_root = "work_dirs/train"

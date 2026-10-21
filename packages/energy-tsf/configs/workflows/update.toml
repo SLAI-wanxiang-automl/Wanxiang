@@ -1,0 +1,15 @@
+[request]
+task_type = "update"
+horizon = "1d"
+stride = "1d"
+validation_days = 7
+top_k = 3
+publish = true
+seed = 42
+
+[search]
+max_parallel_trials = 2
+
+[storage]
+memory_root = "asset_store"
+work_root = "work_dirs/update"

@@ -1,0 +1,38 @@
+[providers.arima]
+max_trials = 10
+[[providers.arima.candidates]]
+params = { p = 1, d = 1, q = 0, maxiter = 50 }
+context_days = 28
+[[providers.arima.candidates]]
+params = { p = 2, d = 1, q = 0, maxiter = 50 }
+context_days = 28
+[[providers.arima.candidates]]
+params = { p = 1, d = 0, q = 1, maxiter = 50 }
+context_days = 14
+[[providers.arima.candidates]]
+params = { p = 2, d = 0, q = 1, maxiter = 50 }
+context_days = 56
+
+[providers.sarima]
+max_trials = 10
+[[providers.sarima.candidates]]
+params = { p = 1, d = 0, q = 0, seasonal_p = 0, seasonal_d = 1, seasonal_q = 0, maxiter = 50 }
+context_days = 28
+[[providers.sarima.candidates]]
+params = { p = 1, d = 0, q = 1, seasonal_p = 0, seasonal_d = 1, seasonal_q = 0, maxiter = 50 }
+context_days = 28
+[[providers.sarima.candidates]]
+params = { p = 2, d = 0, q = 0, seasonal_p = 0, seasonal_d = 1, seasonal_q = 0, maxiter = 50 }
+context_days = 56
+
+[providers.ridge]
+max_trials = 8
+[[providers.ridge.candidates]]
+params = { alpha = 1.0 }
+feature = { daily_lags = [1, 2, 3, 7], recent_lags = 12, rolling_windows = [6, 12, 144], calendar = true }
+[[providers.ridge.candidates]]
+params = { alpha = 0.1 }
+feature = { daily_lags = [1, 2, 3], recent_lags = 12, rolling_windows = [6, 12, 144], calendar = true }
+[[providers.ridge.candidates]]
+params = { alpha = 10.0 }
+feature = { daily_lags = [1, 2, 3, 7], recent_lags = 24, rolling_windows = [12, 144], calendar = true }

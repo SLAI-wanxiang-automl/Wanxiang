@@ -1,0 +1,14 @@
+[storage]
+memory_root = "asset_store"
+work_root = "work_dirs/train"
+content_addressed = true
+
+[ledger]
+enabled = true
+append_only = true
+allow_private_reasoning = false
+
+[foundation]
+local_files_only = true
+allow_download = false
+require_pinned_revision = true

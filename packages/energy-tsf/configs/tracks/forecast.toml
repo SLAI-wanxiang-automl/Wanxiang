@@ -1,0 +1,12 @@
+[permissions]
+read_active = true
+read_candidate = false
+write_active = false
+write_candidate = false
+write_request_output = true
+
+[execution]
+allow_fit = false
+allow_model_save = false
+allow_checkpoint_download = false
+allow_promotion = false

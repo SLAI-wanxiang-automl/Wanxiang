@@ -1,0 +1,26 @@
+[providers."timesfm-2.5"]
+max_trials = 3
+[[providers."timesfm-2.5".candidates]]
+context_days = 28
+[[providers."timesfm-2.5".candidates]]
+context_days = 14
+[[providers."timesfm-2.5".candidates]]
+context_days = 7
+
+[providers.moirai-2]
+max_trials = 3
+[[providers.moirai-2.candidates]]
+context_days = 28
+[[providers.moirai-2.candidates]]
+context_days = 14
+[[providers.moirai-2.candidates]]
+context_days = 7
+
+[providers.chronos-2]
+max_trials = 3
+[[providers.chronos-2.candidates]]
+context_days = 28
+[[providers.chronos-2.candidates]]
+context_days = 14
+[[providers.chronos-2.candidates]]
+context_days = 7

@@ -1,0 +1,9 @@
+[permissions]
+read_active = true
+read_candidate = false
+write_candidate = true
+write_active = true
+allow_fit = true
+allow_model_save = true
+allow_checkpoint_download = false
+allow_promotion = true
