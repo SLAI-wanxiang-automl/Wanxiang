@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Mingyue Wanxiang: Renewable Energy Forecasting Agent from Model Selection to Long-Term Operation"
+abstract: >-
+  Mingyue Wanxiang is a renewable energy output forecasting system for photovoltaic and
+  wind sites. It couples a modeling engine — which answers which model a site should use
+  through reproducible rolling evaluation over statistical, machine-learning, deep-learning
+  and time-series foundation models — with a runtime system that governs long-term
+  operation through task tracks, release gates, asset governance and an append-only audit
+  ledger.
+type: software
+authors:
+  - name: "Shenzhen Loop Area Institute"
+license: MIT
+repository-code: "https://github.com/SLAI-wanxiang-automl/Wanxiang"
+url: "https://github.com/SLAI-wanxiang-automl/Wanxiang"
+keywords:
+  - renewable-energy-forecasting
+  - photovoltaic
+  - wind-power
+  - time-series-forecasting
+  - automated-machine-learning
+  - llm-agent
+  - foundation-models
+  - rolling-backtesting
