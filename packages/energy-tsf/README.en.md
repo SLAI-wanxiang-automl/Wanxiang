@@ -51,8 +51,8 @@ Install Git and Python 3.12 or later, and set up an Agent host such as Codex, Cl
 For example, clone the repository and start Codex:
 
 ```bash
-git clone https://github.com/keyingyang206/energyTSF.git
-cd energyTSF
+git clone https://github.com/SLAI-wanxiang-automl/Wanxiang.git
+cd Wanxiang/packages/energy-tsf
 codex
 ```
 

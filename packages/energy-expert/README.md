@@ -31,8 +31,8 @@ H/F 滚动实验由 `train_validation_test()` 执行，候选模型与搜索预�
 建议新建 Python 3.11 或 3.12 环境。
 
 ```bash
-git clone git@github.com:humble-gambler/EneygyExpert.git
-cd EneygyExpert
+git clone git@github.com:SLAI-wanxiang-automl/Wanxiang.git
+cd Wanxiang/packages/energy-expert
 python3.11 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
