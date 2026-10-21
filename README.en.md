@@ -92,6 +92,70 @@ energy-tsf --help
 
 ---
 
+## Using a single component
+
+No need to clone the whole repository, and no need to install the other half's dependencies.
+
+### Option 1: install with pip (recommended)
+
+```bash
+# Runtime (Python 3.12+, light deps: pandas/sklearn/lightgbm/xgboost)
+pip install "git+https://github.com/SLAI-wanxiang-automl/Wanxiang.git#subdirectory=packages/energy-tsf"
+
+# Modeling engine (Python 3.10+, heavy deps: torch/neuralforecast/prophet, …)
+pip install "git+https://github.com/SLAI-wanxiang-automl/Wanxiang.git#subdirectory=packages/energy-expert"
+```
+
+Pin a tag or commit with `...Wanxiang.git@<tag-or-sha>#subdirectory=packages/energy-tsf`.
+
+In a `uv` project:
+
+```toml
+dependencies = [
+  "energy-tsf-harness @ git+https://github.com/SLAI-wanxiang-automl/Wanxiang.git@v0.1.0#subdirectory=packages/energy-tsf",
+]
+```
+
+### Option 2: checkout only that directory (reading or editing source)
+
+```bash
+git clone --filter=blob:none --sparse https://github.com/SLAI-wanxiang-automl/Wanxiang.git
+cd Wanxiang
+git sparse-checkout set packages/energy-tsf
+```
+
+`--filter=blob:none` fetches file contents on demand and `sparse-checkout` writes only the
+selected directory into the working tree. Add the other component at any time:
+
+```bash
+git sparse-checkout add packages/energy-expert
+```
+
+> In cone mode a few repository-root files (README, LICENSE, …) are still checked out.
+> That is expected.
+
+### Option 3: pick only the dependencies you need
+
+| Need | Do this | Not pulled in |
+|---|---|---|
+| Long-term operation and audit only | install `energy-tsf` only | torch / prophet / ray / pyspark |
+| Model comparison only | install `energy-expert` only | — |
+| Both | clone the repo, `pip install -e` each | — |
+
+This is the core reason the two components are separate packages: the runtime has to be
+deployed at the generation site, where shipping torch + ray is not realistic. See
+[Why two components](docs/why-two-components.md).
+
+> **Note**: GitHub's web UI has no official "download a single folder" button. Third-party
+> DownGit-style tools drop commit history and are not recommended for production use —
+> use one of the three options above.
+>
+> The original component repositories (`EnergyTSF`, `EnergyExpert`) are still individually
+> cloneable, but they are archived read-only and will drift behind this repository. Do not
+> treat them as the primary source.
+
+---
+
 ## Key capabilities
 
 - 🤖 **Natural-language entry** (runtime): the host Agent interprets intent; [SKILL contracts](packages/energy-tsf/.agents/skills/) turn it into structured requests, and all numeric work is done by deterministic code.

@@ -86,6 +86,66 @@ energy-tsf --help
 
 ---
 
+## 单独使用某个组件
+
+不需要 clone 整个仓库，也不需要装另一半的依赖。
+
+### 方式一：pip 直接安装（推荐）
+
+```bash
+# 运行系统（Python 3.12+，依赖轻：pandas/sklearn/lightgbm/xgboost）
+pip install "git+https://github.com/SLAI-wanxiang-automl/Wanxiang.git#subdirectory=packages/energy-tsf"
+
+# 建模引擎（Python 3.10+，依赖较重：torch/neuralforecast/prophet 等）
+pip install "git+https://github.com/SLAI-wanxiang-automl/Wanxiang.git#subdirectory=packages/energy-expert"
+```
+
+可钉版本或提交：`...Wanxiang.git@<tag-or-sha>#subdirectory=packages/energy-tsf`。
+
+`uv` 项目里同样可用：
+
+```toml
+dependencies = [
+  "energy-tsf-harness @ git+https://github.com/SLAI-wanxiang-automl/Wanxiang.git@v0.1.0#subdirectory=packages/energy-tsf",
+]
+```
+
+### 方式二：只检出该目录（需要读源码或改代码）
+
+```bash
+git clone --filter=blob:none --sparse https://github.com/SLAI-wanxiang-automl/Wanxiang.git
+cd Wanxiang
+git sparse-checkout set packages/energy-tsf
+```
+
+`--filter=blob:none` 表示文件内容按需拉取，`sparse-checkout` 只把指定目录写进工作区。
+需要另一个组件时随时补上：
+
+```bash
+git sparse-checkout add packages/energy-expert
+```
+
+> cone 模式下仓库根目录的少量文件（README、LICENSE 等）仍会检出，这是正常行为。
+
+### 方式三：按需求选依赖，避免互相拖累
+
+| 需求 | 做法 | 不会引入 |
+|---|---|---|
+| 只要长期运行与审计 | 只装 `energy-tsf` | torch / prophet / ray / pyspark |
+| 只要横向对比选模型 | 只装 `energy-expert` | — |
+| 两个都要 | clone 整仓，各自 `pip install -e` | — |
+
+这也是当初把两个组件拆成独立包的核心理由：运行系统要部署到场站侧，
+装一套 torch + ray 是不现实的。详见 [为什么是两个组件](docs/why-two-components.md)。
+
+> **注意**：GitHub 网页端没有「下载单个文件夹」的官方入口。第三方 DownGit 类工具会丢失提交历史，
+> 不建议用于生产环境，请用上述三种方式之一。
+>
+> 两个组件的原仓库（`EnergyTSF`、`EnergyExpert`）仍可单独 clone，但它们已归档为只读，
+> 会逐渐落后于本仓库，不建议作为主要来源。
+
+---
+
 ## 核心能力
 
 - 🤖 **自然语言任务入口**（运行系统）：宿主 Agent 理解需求，[SKILL 契约](packages/energy-tsf/.agents/skills/)把自然语言转成结构化请求，数值计算全部交给确定性代码。
