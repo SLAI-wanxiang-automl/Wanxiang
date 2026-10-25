@@ -2,56 +2,69 @@
 
 # 🌙 明月 · 万象
 
-### 新能源出力预测 Agent：从建模到长期运行
+### 新能源出力预测 Agent：Harness 与 Agentic Workflow 两条并行路线
 
 [![Python 3.10–3.13](https://img.shields.io/badge/python-3.10%20%7C%203.13-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Renewable Energy Forecasting](https://img.shields.io/badge/task-renewable%20energy%20forecasting-blue.svg)](docs/architecture.md)
 
-**明月·万象** 是面向真实新能源场站的出力预测系统。它把「选模型」和「跑模型」拆成两层：
-建模引擎负责回答*这个场站该用哪个模型*，运行系统负责回答*模型上线之后怎么一直跑下去*。
+**明月·万象** 用**两条并行技术路线**探索同一个问题：如何让 Agent 真正承担新能源场站的出力预测。
+[`energy-tsf`](packages/energy-tsf) 走 **Harness 路线**，[`energy-expert`](packages/energy-expert) 走
+**Agentic Workflow 路线**。两者不是上下游，而是并列的两套解法。
 
 </div>
 
 ---
 
-## 为什么需要两层
+## 两条并行路线
 
-新能源数据持续抵达，场站的运行条件、设备状态和误差分布都会随时间变化。
-一次训练、长期不变的模型撑不住长期运行；而只有评测、没有发布治理的实验平台，评完就结束，
-没有回答「新数据到了怎么办」。
-
-明月·万象把这两件事交给两个组件，中间用明确的契约连接：
+同一个目标，两种 Agent 架构范式。
 
 ```
-                        用户 / 宿主 Agent（自然语言）
-                                   │
-                                   ▼
-        ┌──────────────────────────────────────────────────┐
-        │  packages/energy-tsf     运行系统 Runtime         │
-        │  ─────────────────────────────────────────────── │
-        │  四类任务轨道  建模 / 预测 / 回测 / 更新            │
-        │  Candidate → 发布门禁 → Active（原子发布）         │
-        │  资产库 · 审计日志 · 分轨权限 · 有界更新            │
-        └───────────────────────┬──────────────────────────┘
-                                │  SearchPool / Solution 契约
-                                ▼
-        ┌──────────────────────────────────────────────────┐
-        │  packages/energy-expert  建模引擎 Engine           │
-        │  ─────────────────────────────────────────────── │
-        │  y / H / F 数据协议 · 时序三段划分                 │
-        │  训练内调参 → 验证集选型 → 测试集只报告             │
-        │  多窗口滚动评测 · 模型谱系 · 三种集成               │
-        │  LLM 只做解释，不做决策                            │
-        └──────────────────────────────────────────────────┘
+                    新能源出力预测（同一问题）
+                              │
+            ┌─────────────────┴─────────────────┐
+            │                                   │
+    路线 A · Harness                   路线 B · Agentic Workflow
+    packages/energy-tsf                packages/energy-expert
+    ──────────────────────              ────────────────────────────
+    Agent 在仓库外                       Agent 在仓库内
+    宿主 Codex / Claude / Pi …           agent.py + llm_reports.py
+             │                                   │
+             ▼                                   ▼
+    读 SKILL 契约理解意图                  LLM 工具调用：时序特征分析 /
+             │                            交叉验证 / 预测
+             ▼                                   │
+    自然语言 → 结构化 Request → TOML                ▼
+             │                          train_validation_test()
+             ▼                          训练内调参 → 验证选型 → 测试报告
+    确定性 CLI 工作流                              │
+    数值计算全部由代码完成                           ▼
+             │                          LLM 生成《训练经验报告》《最终测试报告》
+             ▼                          （排名仍由验证集指标决定）
+    四类任务轨道
+    建模 / 预测 / 回测 / 更新
+             │
+             ▼
+    轨道权限 → Candidate → 发布门禁 → Active
+    资产库 · 审计日志 · 有界更新
 ```
 
-| | 组件 | 解决什么 | 单独适用场景 |
-|---|---|---|---|
-| **L2** | [`energy-tsf`](packages/energy-tsf) · 运行系统 | 模型发布之后：持续预测、滚动回测、受约束更新、可审计 | 已有模型，需要长期在真实场站运行与追责 |
-| **L0–L1** | [`energy-expert`](packages/energy-expert) · 建模引擎 | 模型确定之前：数据协议、滚动评测、模型谱系与集成 | 拿到新场站数据，要横向对比选模型、出实验结论 |
+| | 路线 A · **Harness** | 路线 B · **Agentic Workflow** |
+|---|---|---|
+| 组件 | [`energy-tsf`](packages/energy-tsf) | [`energy-expert`](packages/energy-expert) |
+| Agent 位置 | 仓库外，宿主 Agent | 仓库内，`agent.py` |
+| 编排方式 | SKILL 契约 + 确定性 CLI | LLM 工具调用 + 流水线 |
+| 数值决策 | 全部由确定性代码完成 | 验证集指标（LLM 只做解释） |
+| 模型谱系 | 8 个 Provider，聚焦 | 宽：统计 / ML / 深度 / Prophet / sktime / 基础模型 |
+| 长期运行 | ✅ 预测 / 回测 / 受约束更新 | ❌ 评测完即止 |
+| 发布治理 | ✅ 门禁 / 分轨权限 / 审计日志 | ❌ |
+| 可复现性 | 强（配置哈希 + 输入指纹） | 中（依赖锁定，LLM 环节有随机性） |
+| 依赖重量 | 轻（pandas / sklearn / lgbm / xgb） | 重（torch / ray / prophet / …） |
+| 更适合 | 要长期跑、要出事能追责 | 要横向比、要出实验结论 |
 
-> 两者不是重复实现，而是一个产品的上下两层。详见 [为什么是两个组件](docs/why-two-components.md)。
+> 两条路线的能力覆盖有重叠也有差异。我们同时保留两者，用于对照与取长补短。
+> 选型建议见 [为什么是两条路线](docs/why-two-routes.md)。
 
 ---
 
@@ -62,7 +75,7 @@ git clone https://github.com/SLAI-wanxiang-automl/Wanxiang.git
 cd Wanxiang
 ```
 
-**① 建模引擎**：跑通一次滚动评测（自带 PVOD 光伏数据）
+**① 路线 B · Agentic Workflow**：跑通一次滚动评测（自带 PVOD 光伏数据）
 
 ```bash
 cd packages/energy-expert
@@ -73,7 +86,7 @@ uv run python examples/pvod_models_pipeline.py dataset/PVOD/station00.csv \
   --season-length 96 --num-samples 3 --top-k 2 --plot
 ```
 
-**② 运行系统**：安装并查看四类任务
+**② 路线 A · Harness**：安装并查看四类任务
 
 ```bash
 cd ../energy-tsf
@@ -81,8 +94,8 @@ pip install -e .
 energy-tsf --help
 ```
 
-> 运行系统设计为由外部宿主 Agent（Codex / Claude Code / Pi / DeepSeek 等）通过自然语言驱动，
-> 详见 [`packages/energy-tsf/AGENTS.md`](packages/energy-tsf/AGENTS.md)。
+> 路线 A 设计为不由仓库自己注册 Agent，而是由外部宿主（Codex / Claude Code / Pi / DeepSeek 等）
+> 通过自然语言驱动，详见 [`packages/energy-tsf/AGENTS.md`](packages/energy-tsf/AGENTS.md)。
 
 ---
 
@@ -93,10 +106,10 @@ energy-tsf --help
 ### 方式一：pip 直接安装（推荐）
 
 ```bash
-# 运行系统（Python 3.12+，依赖轻：pandas/sklearn/lightgbm/xgboost）
+# 路线 A · Harness（Python 3.12+，依赖轻：pandas/sklearn/lightgbm/xgboost）
 pip install "git+https://github.com/SLAI-wanxiang-automl/Wanxiang.git#subdirectory=packages/energy-tsf"
 
-# 建模引擎（Python 3.10+，依赖较重：torch/neuralforecast/prophet 等）
+# 路线 B · Agentic Workflow（Python 3.10+，依赖较重：torch/neuralforecast/prophet 等）
 pip install "git+https://github.com/SLAI-wanxiang-automl/Wanxiang.git#subdirectory=packages/energy-expert"
 ```
 
@@ -131,12 +144,12 @@ git sparse-checkout add packages/energy-expert
 
 | 需求 | 做法 | 不会引入 |
 |---|---|---|
-| 只要长期运行与审计 | 只装 `energy-tsf` | torch / prophet / ray / pyspark |
-| 只要横向对比选模型 | 只装 `energy-expert` | — |
-| 两个都要 | clone 整仓，各自 `pip install -e` | — |
+| 走 Harness 路线 | 只装 `energy-tsf` | torch / prophet / ray / pyspark |
+| 走 Agentic Workflow 路线 | 只装 `energy-expert` | — |
+| 两条都要对比着用 | clone 整仓，各自 `pip install -e` | — |
 
-这也是当初把两个组件拆成独立包的核心理由：运行系统要部署到场站侧，
-装一套 torch + ray 是不现实的。详见 [为什么是两个组件](docs/why-two-components.md)。
+这也是两条路线保持独立包的核心理由之一：Harness 路线要部署到场站侧，
+装一套 torch + ray 是不现实的。详见 [为什么是两条路线](docs/why-two-routes.md)。
 
 > **注意**：GitHub 网页端没有「下载单个文件夹」的官方入口。第三方 DownGit 类工具会丢失提交历史，
 > 不建议用于生产环境，请用上述三种方式之一。
@@ -148,12 +161,25 @@ git sparse-checkout add packages/energy-expert
 
 ## 核心能力
 
-- 🤖 **自然语言任务入口**（运行系统）：宿主 Agent 理解需求，[SKILL 契约](packages/energy-tsf/.agents/skills/)把自然语言转成结构化请求，数值计算全部交给确定性代码。
-- 🔬 **可复现的滚动评测**（建模引擎）：60/20/20 时序切分，超参只在训练集内搜索，验证集只做排名，测试集只做报告。
-- 🔁 **面向长期运行**（运行系统）：支持重复预测、滚动回测校准集成权重、受 `SearchPool` 约束的模型更新。
+**两条路线共有**
+
+- 🧩 **新能源场景的数据协议**：统一目标 `y`、历史协变量 `H`、未来已知协变量 `F`；未来协变量必须是预测时点可获得的预报，不能用事后实测冒充。
+- 📊 **时序严格的评测**：按时间顺序切分，超参只在训练集内搜索，验证集只做排名，测试集只做报告。
+- 🤖 **LLM 不参与数值决策**：只负责意图理解与结果解释，排行榜与发布由指标和门禁决定。
+
+**路线 A · Harness（energy-tsf）**
+
+- 🔁 **面向长期运行**：重复预测、滚动回测校准集成权重、受 `SearchPool` 约束的模型更新。
 - 🛡️ **受控发布**：候选方案必须过发布门禁才会原子替换 Active；预测轨道只读 Active。
 - 🧾 **可追溯执行**：配置哈希、输入指纹、计划、资产与门禁记录全量落盘，便于复核每次运行。
-- 🧩 **宽模型谱系**（建模引擎）：统计 / 机器学习 / 深度学习 / Prophet / sktime / 时间序列基础模型（TimesFM 2.5、Moirai 2、Chronos 2）。
+- 🔒 **分轨权限**：每条轨道能做什么由配置写死，例如回测轨道 `allow_fit=false`，禁止借回测之名重训模型。
+
+**路线 B · Agentic Workflow（energy-expert）**
+
+- 🧩 **宽模型谱系**：统计 / 机器学习 / 深度学习 / Prophet / sktime / 时间序列基础模型，支持 Ray / Dask / Spark 分布式。
+- 🔬 **多窗口滚动评测**：`step_size` 推进预测起点，逐窗口出预测、指标与图表，三种集成方式。
+- 📝 **LLM 实验报告**：读取 `experiment_log.json` 生成《训练经验报告》《最终测试报告》，给出调参与选型建议。
+- 🗂️ **自带真实数据**：PVOD 光伏场站数据（15 分钟粒度，含实测气象 `lmd_*` 与 NWP 预报 `nwp_*`）。
 
 ---
 
@@ -162,14 +188,14 @@ git sparse-checkout add packages/energy-expert
 ```text
 Wanxiang/
 ├── packages/
-│   ├── energy-expert/     建模引擎（L0–L1）：数据协议、滚动评测、模型谱系、LLM 报告
-│   └── energy-tsf/        运行系统（L2）：任务轨道、资产治理、发布门禁、审计日志
+│   ├── energy-expert/     路线 B · Agentic Workflow：库内 Agent、滚动评测、宽模型谱系、LLM 报告
+│   └── energy-tsf/        路线 A · Harness：外部宿主 Agent、任务轨道、发布门禁、审计日志
 ├── docs/
-│   ├── architecture.md           两层架构与数据流
-│   ├── why-two-components.md     为什么不是一个仓库 / 一个组件
-│   ├── terminology.md            两个组件之间的术语映射
-│   └── roadmap.md                路线图
-├── examples/              跨组件端到端流程
+│   ├── architecture.md           两条路线的架构对照
+│   ├── why-two-routes.md          为什么并行保留两条路线
+│   ├── terminology.md             两条路线之间的术语映射
+│   └── roadmap.md                 路线图
+├── examples/              两条路线的对照流程
 └── scripts/               上游同步脚本（subtree pull / push）
 ```
 
@@ -177,9 +203,9 @@ Wanxiang/
 
 ## 文档
 
-- [架构设计](docs/architecture.md) — 两层如何协作、权限与门禁如何约束
-- [为什么是两个组件](docs/why-two-components.md) — 主动回答最常见的质疑
-- [术语映射表](docs/terminology.md) — 建模引擎与运行系统的概念对照
+- [架构设计](docs/architecture.md) — 两条路线各自的控制流与对照
+- [为什么是两条路线](docs/why-two-routes.md) — 主动回答最常见的质疑
+- [术语映射表](docs/terminology.md) — 两条路线的概念对照
 - [路线图](docs/roadmap.md) — 近期与中长期计划
 
 ---
@@ -187,13 +213,13 @@ Wanxiang/
 ## 现状说明
 
 本项目由两个已有仓库合并而来，组件代码保持原样导入、提交历史完整保留。
-当前状态（2026-10）：
+两条路线**独立演进、互不依赖**，可以单独安装与使用。当前状态（2026-10）：
 
-- 建模引擎已有真实数据集、示例与单元测试；运行系统的端到端回归测试仍在补齐中。
-- 两个组件目前**分别调用**：建模引擎产出排名与集成权重，运行系统负责发布与运维，
-  中间的自动贯通（建模结果自动成为运行系统的 Candidate）正在推进，见 [路线图](docs/roadmap.md)。
-- 建模引擎中的时间序列基础模型适配器仅支持 zero-shot 推理；
-  运行系统中的基础模型要求本地已物化的权重与钉死的版本，不支持运行时下载。
+- `energy-expert` 已有真实数据集、示例与单元测试；`energy-tsf` 的端到端回归测试仍在补齐中。
+- 两条路线的能力覆盖并不相同：`energy-tsf` 独有发布治理与长期运行，
+  `energy-expert` 独有宽模型谱系与滚动评测。对齐与取长补短见 [路线图](docs/roadmap.md)。
+- `energy-expert` 中的基础模型适配器仅支持 zero-shot 推理；
+  `energy-tsf` 中的基础模型要求本地已物化的权重与钉死的版本，不支持运行时下载。
 
 ---
 
@@ -209,6 +235,6 @@ Wanxiang/
 <div align="center">
 
 **明月 · 万象** · Mingyue Wanxiang
-*Renewable energy forecasting, from model selection to long-term operation.*
+*Two parallel routes — Harness and Agentic Workflow — for agentic renewable energy forecasting.*
 
 </div>

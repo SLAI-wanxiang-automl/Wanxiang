@@ -2,61 +2,71 @@
 
 # 🌙 Mingyue · Wanxiang
 
-### Renewable Energy Forecasting Agent: From Model Selection to Long-Term Operation
+### Renewable Energy Forecasting Agent: Two Parallel Routes — Harness and Agentic Workflow
 
 [![Python 3.10–3.13](https://img.shields.io/badge/python-3.10%20%7C%203.13-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Renewable Energy Forecasting](https://img.shields.io/badge/task-renewable%20energy%20forecasting-blue.svg)](docs/architecture.md)
 
-**Mingyue Wanxiang** is a renewable energy output forecasting system built for real
-generation sites. It splits the problem in two: a *modeling engine* answers
-**which model this site should use**, and a *runtime system* answers
-**how the model keeps running after it ships**.
+**Mingyue Wanxiang** explores one question along **two parallel routes**: how an Agent can
+genuinely own renewable energy output forecasting. [`energy-tsf`](packages/energy-tsf) takes the
+**Harness route**; [`energy-expert`](packages/energy-expert) takes the
+**Agentic Workflow route**. They are not upstream and downstream of each other — they are two
+competing answers.
 
 </div>
 
 ---
 
-## Why two layers
+## Two parallel routes
 
-Renewable energy data keeps arriving, and site conditions, equipment state, and error
-distributions drift over time. A model trained once and never revisited cannot carry
-long-term operation. At the same time, a benchmark-only platform stops right after
-evaluation and never answers "what happens when new data shows up".
-
-Mingyue Wanxiang assigns these to two components joined by explicit contracts:
+One goal, two agent architecture paradigms.
 
 ```
-                        User / Host Agent (natural language)
-                                   │
-                                   ▼
-        ┌──────────────────────────────────────────────────┐
-        │  packages/energy-tsf     Runtime System           │
-        │  ─────────────────────────────────────────────── │
-        │  Four task tracks  modeling / forecast /          │
-        │                    backtest / update              │
-        │  Candidate → release gate → Active (atomic)       │
-        │  Asset store · ledger · per-track permissions     │
-        └───────────────────────┬──────────────────────────┘
-                                │  SearchPool / Solution contract
-                                ▼
-        ┌──────────────────────────────────────────────────┐
-        │  packages/energy-expert  Modeling Engine          │
-        │  ─────────────────────────────────────────────── │
-        │  y / H / F data protocol · chronological splits   │
-        │  Tune on train → rank on validation → report test │
-        │  Rolling multi-window evaluation · model catalog  │
-        │  LLM explains; metrics decide                     │
-        └──────────────────────────────────────────────────┘
+                Renewable energy forecasting (same problem)
+                              │
+            ┌─────────────────┴─────────────────┐
+            │                                   │
+     Route A · Harness                  Route B · Agentic Workflow
+     packages/energy-tsf                packages/energy-expert
+     ──────────────────────              ────────────────────────────
+     Agent lives outside                 Agent lives inside
+     host: Codex / Claude / Pi …         agent.py + llm_reports.py
+             │                                   │
+             ▼                                   ▼
+     SKILL contracts parse intent        LLM tool calls: feature analysis /
+             │                           cross-validation / forecast
+             ▼                                   │
+     natural language → Request → TOML            ▼
+             │                          train_validation_test()
+             ▼                          tune on train → rank on validation
+     deterministic CLI workflow                  │
+     all numeric work is code                    ▼
+             │                          LLM writes experience / test reports
+             ▼                          (metrics still decide the ranking)
+     four task tracks
+     modeling / forecast / backtest / update
+             │
+             ▼
+     track permissions → Candidate → release gate → Active
+     asset store · ledger · bounded updates
 ```
 
-| | Component | What it solves | Use it alone when |
-|---|---|---|---|
-| **L2** | [`energy-tsf`](packages/energy-tsf) · Runtime | Life after release: repeat forecasting, rolling backtest, constrained updates, auditability | You already have a model and must operate it at real sites |
-| **L0–L1** | [`energy-expert`](packages/energy-expert) · Engine | Life before release: data protocol, rolling evaluation, model catalog, ensembling | You have a new site and need to compare and select models |
+| | Route A · **Harness** | Route B · **Agentic Workflow** |
+|---|---|---|
+| Component | [`energy-tsf`](packages/energy-tsf) | [`energy-expert`](packages/energy-expert) |
+| Where the agent lives | Outside the repo, host agent | Inside the repo, `agent.py` |
+| Orchestration | SKILL contracts + deterministic CLI | LLM tool calls + pipeline |
+| Numeric decisions | Entirely deterministic code | Validation metrics (LLM explains only) |
+| Model catalog | 8 providers, focused | Broad: stats / ML / deep / Prophet / sktime / foundation |
+| Long-term operation | ✅ forecast / backtest / bounded update | ❌ stops after evaluation |
+| Release governance | ✅ gates / per-track permissions / ledger | ❌ |
+| Reproducibility | Strong (config hash + input fingerprints) | Medium (locked deps, LLM non-determinism) |
+| Dependency weight | Light (pandas / sklearn / lgbm / xgb) | Heavy (torch / ray / prophet / …) |
+| Best for | Running long-term and being accountable | Comparing models and producing conclusions |
 
-> These are not duplicate implementations — they are the upper and lower layers of one
-> product. See [Why two components](docs/why-two-components.md).
+> The two routes overlap and differ in coverage. We keep both to compare them and to port
+> proven capabilities across. See [Why two routes](docs/why-two-routes.md).
 
 ---
 
@@ -67,7 +77,7 @@ git clone https://github.com/SLAI-wanxiang-automl/Wanxiang.git
 cd Wanxiang
 ```
 
-**① Modeling engine** — run a rolling evaluation (PVOD photovoltaic data included)
+**① Route B · Agentic Workflow** — run a rolling evaluation (PVOD photovoltaic data included)
 
 ```bash
 cd packages/energy-expert
@@ -78,7 +88,7 @@ uv run python examples/pvod_models_pipeline.py dataset/PVOD/station00.csv \
   --season-length 96 --num-samples 3 --top-k 2 --plot
 ```
 
-**② Runtime system** — install and inspect the four task tracks
+**② Route A · Harness** — install and inspect the four task tracks
 
 ```bash
 cd ../energy-tsf
@@ -86,8 +96,8 @@ pip install -e .
 energy-tsf --help
 ```
 
-> The runtime is designed to be driven by an external host Agent (Codex, Claude Code, Pi,
-> DeepSeek, …) through natural language. See
+> Route A registers no agent of its own: it is driven by an external host (Codex, Claude Code,
+> Pi, DeepSeek, …) through natural language. See
 > [`packages/energy-tsf/AGENTS.md`](packages/energy-tsf/AGENTS.md).
 
 ---
@@ -99,10 +109,10 @@ No need to clone the whole repository, and no need to install the other half's d
 ### Option 1: install with pip (recommended)
 
 ```bash
-# Runtime (Python 3.12+, light deps: pandas/sklearn/lightgbm/xgboost)
+# Route A · Harness (Python 3.12+, light deps: pandas/sklearn/lightgbm/xgboost)
 pip install "git+https://github.com/SLAI-wanxiang-automl/Wanxiang.git#subdirectory=packages/energy-tsf"
 
-# Modeling engine (Python 3.10+, heavy deps: torch/neuralforecast/prophet, …)
+# Route B · Agentic Workflow (Python 3.10+, heavy deps: torch/neuralforecast/prophet, …)
 pip install "git+https://github.com/SLAI-wanxiang-automl/Wanxiang.git#subdirectory=packages/energy-expert"
 ```
 
@@ -138,13 +148,13 @@ git sparse-checkout add packages/energy-expert
 
 | Need | Do this | Not pulled in |
 |---|---|---|
-| Long-term operation and audit only | install `energy-tsf` only | torch / prophet / ray / pyspark |
-| Model comparison only | install `energy-expert` only | — |
-| Both | clone the repo, `pip install -e` each | — |
+| Take the Harness route | install `energy-tsf` only | torch / prophet / ray / pyspark |
+| Take the Agentic Workflow route | install `energy-expert` only | — |
+| Compare both | clone the repo, `pip install -e` each | — |
 
-This is the core reason the two components are separate packages: the runtime has to be
-deployed at the generation site, where shipping torch + ray is not realistic. See
-[Why two components](docs/why-two-components.md).
+One reason the two routes stay separate packages: the Harness route must be deployable at the
+generation site, where shipping torch + ray is not realistic. See
+[Why two routes](docs/why-two-routes.md).
 
 > **Note**: GitHub's web UI has no official "download a single folder" button. Third-party
 > DownGit-style tools drop commit history and are not recommended for production use —
@@ -158,12 +168,25 @@ deployed at the generation site, where shipping torch + ray is not realistic. Se
 
 ## Key capabilities
 
-- 🤖 **Natural-language entry** (runtime): the host Agent interprets intent; [SKILL contracts](packages/energy-tsf/.agents/skills/) turn it into structured requests, and all numeric work is done by deterministic code.
-- 🔬 **Reproducible rolling evaluation** (engine): 60/20/20 chronological split, hyperparameters searched inside train only, validation used solely for ranking, test used solely for reporting.
-- 🔁 **Built for long-term operation** (runtime): repeated forecasting, rolling backtest that recalibrates ensemble weights, and updates constrained to the bound `SearchPool`.
+**Shared by both routes**
+
+- 🧩 **Energy-domain data protocol**: target `y`, historical covariates `H`, known-future covariates `F`. Future covariates must be forecasts actually available at the forecast origin — never post-hoc observations.
+- 📊 **Chronologically strict evaluation**: time-ordered splits, hyperparameters searched inside train only, validation used solely for ranking, test used solely for reporting.
+- 🤖 **LLM never makes numeric decisions**: it handles intent parsing and explanation; rankings and releases are decided by metrics and gates.
+
+**Route A · Harness (energy-tsf)**
+
+- 🔁 **Built for long-term operation**: repeated forecasting, rolling backtest that recalibrates ensemble weights, and updates constrained to the bound `SearchPool`.
 - 🛡️ **Controlled release**: a candidate must pass the release gate before it atomically replaces Active; the forecast track is read-only on Active.
 - 🧾 **Traceable execution**: config hashes, input fingerprints, plans, assets, and gate decisions are persisted for post-hoc review.
-- 🧩 **Broad model catalog** (engine): statistical, machine learning, deep learning, Prophet, sktime, and time-series foundation models (TimesFM 2.5, Moirai 2, Chronos 2).
+- 🔒 **Per-track permissions**: what each track may do is declared in config — the backtest track sets `allow_fit=false`, so it cannot retrain models under the cover of a backtest.
+
+**Route B · Agentic Workflow (energy-expert)**
+
+- 🧩 **Broad model catalog**: statistical, machine learning, deep learning, Prophet, sktime and time-series foundation models, with Ray / Dask / Spark backends.
+- 🔬 **Multi-window rolling evaluation**: `step_size` advances the forecast origin, producing per-window forecasts, metrics and plots, with three ensemble strategies.
+- 📝 **LLM experiment reports**: reads `experiment_log.json` and writes a training-experience report and a final test report with tuning and selection advice.
+- 🗂️ **Ships real data**: the PVOD photovoltaic dataset (15-minute resolution, with measured weather `lmd_*` and NWP forecasts `nwp_*`).
 
 ---
 
@@ -172,16 +195,16 @@ deployed at the generation site, where shipping torch + ray is not realistic. Se
 ```text
 Wanxiang/
 ├── packages/
-│   ├── energy-expert/     Modeling engine (L0–L1): data protocol, rolling evaluation,
-│   │                      model catalog, LLM reports
-│   └── energy-tsf/        Runtime system (L2): task tracks, asset governance,
-│                          release gates, audit ledger
+│   ├── energy-expert/     Route B · Agentic Workflow: in-repo agent, rolling evaluation,
+│   │                      broad model catalog, LLM reports
+│   └── energy-tsf/        Route A · Harness: external host agent, task tracks, release
+│                          gates, audit ledger
 ├── docs/
-│   ├── architecture.md          Two-layer architecture and data flow
-│   ├── why-two-components.md    Why this is not a single component
-│   ├── terminology.md           Concept mapping between the two components
+│   ├── architecture.md          Architecture of the two routes
+│   ├── why-two-routes.md        Why both routes are kept in parallel
+│   ├── terminology.md           Concept mapping between the two routes
 │   └── roadmap.md               Roadmap
-├── examples/              Cross-component end-to-end workflow
+├── examples/              Workflow of both routes side by side
 └── scripts/               Upstream sync helpers (subtree pull / push)
 ```
 
@@ -189,9 +212,9 @@ Wanxiang/
 
 ## Documentation
 
-- [Architecture](docs/architecture.md) — how the layers cooperate, and how permissions and gates constrain execution
-- [Why two components](docs/why-two-components.md) — answers the most common question up front
-- [Terminology mapping](docs/terminology.md) — concept correspondence between engine and runtime
+- [Architecture](docs/architecture.md) — each route's control flow, plus a comparison
+- [Why two routes](docs/why-two-routes.md) — answers the most common question up front
+- [Terminology mapping](docs/terminology.md) — concept correspondence between the routes
 - [Roadmap](docs/roadmap.md) — near-term and long-term plans
 
 ---
@@ -199,15 +222,16 @@ Wanxiang/
 ## Current status
 
 This repository consolidates two pre-existing repositories. Component code was imported
-as-is with full commit history preserved. As of 2026-10:
+as-is with full commit history preserved. The two routes **evolve independently** and can be
+installed and used on their own. As of 2026-10:
 
-- The modeling engine ships a real dataset, examples, and unit tests; end-to-end regression
-  tests for the runtime are still being filled in.
-- The two components are currently **invoked separately**: the engine produces rankings and
-  ensemble weights, the runtime owns release and operation. Automatic hand-off (engine
-  results becoming runtime Candidates) is in progress — see the [roadmap](docs/roadmap.md).
-- Foundation model adapters in the engine support zero-shot inference only. Foundation
-  providers in the runtime require locally materialized weights with pinned revisions and
+- `energy-expert` ships a real dataset, examples and unit tests; end-to-end regression tests
+  for `energy-tsf` are still being filled in.
+- The two routes do **not** cover the same ground: `energy-tsf` alone has release governance
+  and long-term operation, `energy-expert` alone has the broad model catalog and rolling
+  evaluation. Aligning them is on the [roadmap](docs/roadmap.md).
+- Foundation model adapters in `energy-expert` support zero-shot inference only. Foundation
+  providers in `energy-tsf` require locally materialized weights with pinned revisions and
   do not download at run time.
 
 ---
@@ -225,6 +249,6 @@ as-is with full commit history preserved. As of 2026-10:
 <div align="center">
 
 **Mingyue · Wanxiang**
-*Renewable energy forecasting, from model selection to long-term operation.*
+*Two parallel routes — Harness and Agentic Workflow — for agentic renewable energy forecasting.*
 
 </div>
