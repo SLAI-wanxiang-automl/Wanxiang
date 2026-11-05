@@ -1,3 +1,5 @@
+[中文](README.md) | [English](README.en.md)
+
 <div align="center">
 
 # 🌙 明月 · 万象
@@ -9,7 +11,7 @@
 [![Renewable Energy Forecasting](https://img.shields.io/badge/task-renewable%20energy%20forecasting-blue.svg)](docs/architecture.md)
 
 **明月·万象** 用**两条并行技术路线**探索同一个问题：如何让 Agent 真正承担新能源场站的出力预测。
-[`energy-tsf`](packages/energy-tsf) 走 **Harness 路线**，[`energy-expert`](packages/energy-expert) 走
+ `energy-tsf` 走 **Harness 路线**，`energy-expert` 走
 **Agentic Workflow 路线**。两者不是上下游，而是并列的两套解法。
 
 </div>
@@ -52,7 +54,7 @@
 
 | | 路线 A · **Harness** | 路线 B · **Agentic Workflow** |
 |---|---|---|
-| 组件 | [`energy-tsf`](packages/energy-tsf) | [`energy-expert`](packages/energy-expert) |
+| 组件 | `energy-tsf` | `energy-expert` |
 | Agent 位置 | 仓库外，宿主 Agent | 仓库内，`agent.py` |
 | 编排方式 | SKILL 契约 + 确定性 CLI | LLM 工具调用 + 流水线 |
 | 数值决策 | 全部由确定性代码完成 | 验证集指标（LLM 只做解释） |
@@ -154,8 +156,6 @@ git sparse-checkout add packages/energy-expert
 > **注意**：GitHub 网页端没有「下载单个文件夹」的官方入口。第三方 DownGit 类工具会丢失提交历史，
 > 不建议用于生产环境，请用上述三种方式之一。
 >
-> 两个组件的原仓库（`EnergyTSF`、`EnergyExpert`）仍可单独 clone，但它们已归档为只读，
-> 会逐渐落后于本仓库，不建议作为主要来源。
 
 ---
 
@@ -207,19 +207,6 @@ Wanxiang/
 - [为什么是两条路线](docs/why-two-routes.md) — 主动回答最常见的质疑
 - [术语映射表](docs/terminology.md) — 两条路线的概念对照
 - [路线图](docs/roadmap.md) — 近期与中长期计划
-
----
-
-## 现状说明
-
-本项目由两个已有仓库合并而来，组件代码保持原样导入、提交历史完整保留。
-两条路线**独立演进、互不依赖**，可以单独安装与使用。当前状态（2026-10）：
-
-- `energy-expert` 已有真实数据集、示例与单元测试；`energy-tsf` 的端到端回归测试仍在补齐中。
-- 两条路线的能力覆盖并不相同：`energy-tsf` 独有发布治理与长期运行，
-  `energy-expert` 独有宽模型谱系与滚动评测。对齐与取长补短见 [路线图](docs/roadmap.md)。
-- `energy-expert` 中的基础模型适配器仅支持 zero-shot 推理；
-  `energy-tsf` 中的基础模型要求本地已物化的权重与钉死的版本，不支持运行时下载。
 
 ---
 

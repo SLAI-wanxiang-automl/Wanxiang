@@ -1,3 +1,5 @@
+[中文](README.md) | [English](README.en.md)
+
 <div align="center">
 
 # 🌙 Mingyue · Wanxiang
@@ -9,8 +11,8 @@
 [![Renewable Energy Forecasting](https://img.shields.io/badge/task-renewable%20energy%20forecasting-blue.svg)](docs/architecture.md)
 
 **Mingyue Wanxiang** explores one question along **two parallel routes**: how an Agent can
-genuinely own renewable energy output forecasting. [`energy-tsf`](packages/energy-tsf) takes the
-**Harness route**; [`energy-expert`](packages/energy-expert) takes the
+genuinely own renewable energy output forecasting. `energy-tsf` takes the
+**Harness route**; `energy-expert` takes the
 **Agentic Workflow route**. They are not upstream and downstream of each other — they are two
 competing answers.
 
@@ -54,7 +56,7 @@ One goal, two agent architecture paradigms.
 
 | | Route A · **Harness** | Route B · **Agentic Workflow** |
 |---|---|---|
-| Component | [`energy-tsf`](packages/energy-tsf) | [`energy-expert`](packages/energy-expert) |
+| Component | `energy-tsf` | `energy-expert` |
 | Where the agent lives | Outside the repo, host agent | Inside the repo, `agent.py` |
 | Orchestration | SKILL contracts + deterministic CLI | LLM tool calls + pipeline |
 | Numeric decisions | Entirely deterministic code | Validation metrics (LLM explains only) |
@@ -160,9 +162,6 @@ generation site, where shipping torch + ray is not realistic. See
 > DownGit-style tools drop commit history and are not recommended for production use —
 > use one of the three options above.
 >
-> The original component repositories (`EnergyTSF`, `EnergyExpert`) are still individually
-> cloneable, but they are archived read-only and will drift behind this repository. Do not
-> treat them as the primary source.
 
 ---
 
@@ -216,23 +215,6 @@ Wanxiang/
 - [Why two routes](docs/why-two-routes.md) — answers the most common question up front
 - [Terminology mapping](docs/terminology.md) — concept correspondence between the routes
 - [Roadmap](docs/roadmap.md) — near-term and long-term plans
-
----
-
-## Current status
-
-This repository consolidates two pre-existing repositories. Component code was imported
-as-is with full commit history preserved. The two routes **evolve independently** and can be
-installed and used on their own. As of 2026-10:
-
-- `energy-expert` ships a real dataset, examples and unit tests; end-to-end regression tests
-  for `energy-tsf` are still being filled in.
-- The two routes do **not** cover the same ground: `energy-tsf` alone has release governance
-  and long-term operation, `energy-expert` alone has the broad model catalog and rolling
-  evaluation. Aligning them is on the [roadmap](docs/roadmap.md).
-- Foundation model adapters in `energy-expert` support zero-shot inference only. Foundation
-  providers in `energy-tsf` require locally materialized weights with pinned revisions and
-  do not download at run time.
 
 ---
 
